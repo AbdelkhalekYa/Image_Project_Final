@@ -498,13 +498,7 @@ class ImageProcessingClass:
 
 
 
-    # def manual_segmentation(image, low_threshold, high_threshold, value=255):
-    #     segmented_image = np.zeros_like(image)
-    #     mask = (image >= low_threshold) & (image <= high_threshold)
-    #     segmented_image[mask] = value
-    #     return segmented_image
-
-    # image = cv2.imread('moon-jellyfish-aurelia-aurita-floating-in-the-ocean-two-column.jpg.thumb.768.768.jpg', cv2.IMREAD_GRAYSCALE)    
+    
 
     def peak_segmentation(self, image):
         histogram, bin_edges = np.histogram(image.flatten(), bins=256, range=[0, 256])
