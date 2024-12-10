@@ -9,25 +9,77 @@ class ImageProcessingClass:
         self.image = image
 
 
+#################################################################################################################################
 
-    def apply_kernel(self, image, kernel):
-        """Apply the given kernel to the image using convolution"""
+# Grayscale , Halftone , Histogram
+
+    def grayscale(self):
+        """Convert the image to grayscale."""
+        if self.image.mode != 'RGB':
+            self.image = self.image.convert('RGB')
+
+        img_array = np.array(self.image)
+        # Compute grayscale values using the luminance formula
+        grayscale_array = (
+            0.2989 * img_array[:, :, 0] + 0.5870 * img_array[:, :, 1] + 0.1140 * img_array[:, :, 2]
+        ).astype(np.uint8)
+
+        self.image = Image.fromarray(grayscale_array)
+        return self.image
+    
+#######################################################
+    
+    def halftoning(self, threshold=128):
+        if self.image.mode != 'L':
+            self.image = self.image.convert('L')
 
         self.image = self.grayscale()
-        img_array = np.array(image)
+        img_array = np.array(self.image, dtype=np.float32)
+
         height, width = img_array.shape
-        kernel_size = kernel.shape[0]
-        pad_size = kernel_size // 2
-        padded_image = np.pad(img_array, pad_size, mode='constant', constant_values=0)
-
-        output = np.zeros_like(img_array)
-
         for i in range(height):
             for j in range(width):
-                region = padded_image[i:i + kernel_size, j:j + kernel_size]
-                output[i, j] = np.sum(region * kernel)
+                old_pixel = img_array[i, j]
+                new_pixel = 255 if old_pixel >= threshold else 0
+                img_array[i, j] = new_pixel
+                error = old_pixel - new_pixel
 
-        return output
+                if j + 1 < width:
+                    img_array[i, j + 1] += error * 7 / 16
+                if i + 1 < height and j > 0:
+                    img_array[i + 1, j - 1] += error * 3 / 16
+                if i + 1 < height:
+                    img_array[i + 1, j] += error * 5 / 16
+                if i + 1 < height and j + 1 < width:
+                    img_array[i + 1, j + 1] += error * 1 / 16
+
+        img_array = np.clip(img_array, 0, 255)
+        return Image.fromarray(img_array.astype(np.uint8))
+
+#######################################################
+
+
+    def histogram_equalization(self):
+        if self.image.mode != 'L':
+            self.image = self.image.convert('L')
+
+        self.image = self.grayscale()
+
+        img_array = np.array(self.image)
+        flat = img_array.flatten()
+
+        hist, bins = np.histogram(flat, bins=256, range=[0, 256], density=True)
+        cdf = hist.cumsum()
+        cdf_normalized = cdf * (255 / cdf[-1])
+
+        equalized_img_array = np.interp(flat, bins[:-1], cdf_normalized).reshape(img_array.shape)
+        return Image.fromarray(equalized_img_array.astype(np.uint8))
+
+
+
+#################################################################################################################################
+
+    # Simple Edge Detection 
 
     def sobel_operator(self):
         """Apply Sobel operator manually."""
@@ -58,6 +110,8 @@ class ImageProcessingClass:
         self.image = Image.fromarray(sobel_image)
         return self.image
 
+#######################################################
+
     def prewitt_operator(self):
         """Apply Prewitt operator manually."""
         self.image = self.grayscale()
@@ -86,6 +140,8 @@ class ImageProcessingClass:
         prewitt_image = ((prewitt_image - prewitt_image.min()) / (prewitt_image.max() - prewitt_image.min()) * 255).astype(np.uint8)
         self.image = Image.fromarray(prewitt_image)
         return self.image
+
+#######################################################
 
     def kirsch_compass_operator(self):
         """Apply Kirsch Compass operator manually."""
@@ -122,63 +178,13 @@ class ImageProcessingClass:
         kirsch_image = ((kirsch_image - kirsch_image.min()) / (kirsch_image.max() - kirsch_image.min()) * 255).astype(np.uint8)
         self.image = Image.fromarray(kirsch_image)
         return self.image
-
-    def grayscale(self):
-        """Convert the image to grayscale."""
-        if self.image.mode != 'RGB':
-            self.image = self.image.convert('RGB')
-
-        img_array = np.array(self.image)
-        # Compute grayscale values using the luminance formula
-        grayscale_array = (
-            0.2989 * img_array[:, :, 0] + 0.5870 * img_array[:, :, 1] + 0.1140 * img_array[:, :, 2]
-        ).astype(np.uint8)
-
-        self.image = Image.fromarray(grayscale_array)
-        return self.image
     
-    def halftoning(self, threshold=128):
-        if self.image.mode != 'L':
-            self.image = self.image.convert('L')
+#################################################################################################################################
 
-        self.image = self.grayscale()
-        img_array = np.array(self.image, dtype=np.float32)
 
-        height, width = img_array.shape
-        for i in range(height):
-            for j in range(width):
-                old_pixel = img_array[i, j]
-                new_pixel = 255 if old_pixel >= threshold else 0
-                img_array[i, j] = new_pixel
-                error = old_pixel - new_pixel
 
-                if j + 1 < width:
-                    img_array[i, j + 1] += error * 7 / 16
-                if i + 1 < height and j > 0:
-                    img_array[i + 1, j - 1] += error * 3 / 16
-                if i + 1 < height:
-                    img_array[i + 1, j] += error * 5 / 16
-                if i + 1 < height and j + 1 < width:
-                    img_array[i + 1, j + 1] += error * 1 / 16
+# filtering high , low , medain  
 
-        img_array = np.clip(img_array, 0, 255)
-        return Image.fromarray(img_array.astype(np.uint8))
-
-    def histogram_equalization(self):
-        if self.image.mode != 'L':
-            self.image = self.image.convert('L')
-
-        self.image = self.grayscale()
-
-        img_array = np.array(self.image)
-        flat = img_array.flatten()
-
-        hist, bins = np.histogram(flat, bins=256, range=[0, 256], density=True)
-        cdf = hist.cumsum()
-        cdf_normalized = cdf * (255 / cdf[-1])
-
-        equalized_img_array = np.interp(flat, bins[:-1], cdf_normalized).reshape(img_array.shape)
-        return Image.fromarray(equalized_img_array.astype(np.uint8))
 
     def high_pass_filter(self):
 
@@ -197,6 +203,9 @@ class ImageProcessingClass:
         result = np.clip(result, 0, 255)
         return Image.fromarray(result.astype(np.uint8))
 
+#######################################################
+
+
     def low_pass_filter(self):
 
         self.image = self.grayscale()
@@ -214,6 +223,9 @@ class ImageProcessingClass:
         result = np.clip(result, 0, 255)
         return Image.fromarray(result.astype(np.uint8))
 
+#######################################################
+
+
     def median_filter(self):
 
         if self.image.mode != 'L':
@@ -223,6 +235,12 @@ class ImageProcessingClass:
         img_array = np.array(self.image, dtype=np.uint8)
         filtered_image = cv2.medianBlur(img_array, 3)
         return Image.fromarray(filtered_image)
+    
+    
+
+#################################################################################################################################
+
+# Image Operations
     
     def add(self):
         """Add the image to itself."""
@@ -251,6 +269,8 @@ class ImageProcessingClass:
         self.image = Image.fromarray(added_image)
         return self.image
     
+#######################################################
+    
     def subtract(self):
         """Subtract the image from itself."""
         self.image = self.grayscale()
@@ -277,6 +297,8 @@ class ImageProcessingClass:
 
         self.image = Image.fromarray(subtracted_image)
         return self.image
+
+#######################################################
 
     def invert(self):
         """Invert the image."""
@@ -305,6 +327,11 @@ class ImageProcessingClass:
         self.image = Image.fromarray(inverted_image)
         return self.image
 
+
+#################################################################################################################################
+
+# Advanced Edge Detection
+
     def homeginty_operator(self, threshold=5):
         """Apply Homeginty operator for edge detection"""
 
@@ -332,6 +359,8 @@ class ImageProcessingClass:
 
         return Image.fromarray(homeginty_image)
 
+#######################################################
+
     def differnce_operator(self, threshold=10):
         """Apply Difference operator for edge detection"""
 
@@ -351,6 +380,8 @@ class ImageProcessingClass:
                 differnce_image[i, j] = np.where(max_diff >= threshold, max_diff, 0)
 
         return Image.fromarray(differnce_image)
+    
+#######################################################
 
     def contrast_based_edge_detection(self):
         """Apply Contrast-Based Edge Detection from scratch"""
@@ -405,7 +436,10 @@ class ImageProcessingClass:
         # Convert arrays back to PIL images
         return Image.fromarray(contrast_edges), Image.fromarray(edge_output), Image.fromarray(average_output)
 
-        
+
+#######################################################
+
+
     def differnece_of_Gaussians(self):
         """Apply Difference of Gaussians (DoG) for edge detection"""
 
@@ -438,6 +472,8 @@ class ImageProcessingClass:
 
         dog = blured1 - blured2
         return Image.fromarray(dog), Image.fromarray(blured1), Image.fromarray(blured2)
+    
+#######################################################
 
     def varience_operator(self):
         """Apply Variance operator for edge detection"""
@@ -456,6 +492,8 @@ class ImageProcessingClass:
 
         return Image.fromarray(output)
 
+#######################################################
+
     def range_operator(self):
         """Apply Range operator for edge detection"""
 
@@ -471,7 +509,9 @@ class ImageProcessingClass:
                 output[i, j] = range_value
 
         return Image.fromarray(output)
-    
+
+#######################################################
+
     def halftoning_simple(self, threshold=128):
         # Convert image to grayscale
         grayscale_image = self.image.convert("L")
@@ -479,47 +519,4 @@ class ImageProcessingClass:
         halftone_image = grayscale_image.point(lambda p: 255 if p > threshold else 0)
         return halftone_image
     
-   
-    def manual_segmentation(self, low_threshold, high_threshold, value=255):
-        """
-        Performs manual segmentation based on intensity thresholds.
-        """
-        # Convert the image to grayscale (if it's not already)
-        image_array = self.image.convert('L')  # Convert to grayscale
-        image_array = np.array(image_array)  # Convert to numpy array (single channel)
-        # Create a blank segmented image
-        segmented_image = np.zeros_like(image_array)
-        # Apply the threshold mask
-        mask = (image_array >= low_threshold) & (image_array <= high_threshold)
-        print(mask)
-        # Set the segmented pixels to the specified value
-        segmented_image[mask] = value
-        return segmented_image
-
-
-
-    
-
-    def peak_segmentation(self, image):
-        histogram, bin_edges = np.histogram(image.flatten(), bins=256, range=[0, 256])
-        peaks, _ = find_peaks(histogram, height=0)
-        if len(peaks) > 1:
-            threshold = (bin_edges[peaks[-1]] + bin_edges[peaks[-2]]) / 2
-        else:
-            threshold = 128
-        segmented_image = (image >= threshold) * 255
-        return segmented_image.astype(np.uint8)
-
-    def valley_segmentation(self, image):
-        histogram, bin_edges = np.histogram(image.flatten(), bins=256, range=[0, 256])
-        valleys, _ = find_peaks(-histogram, height=0)
-        if len(valleys) > 1:
-            threshold = (bin_edges[valleys[-1]] + bin_edges[valleys[-2]]) / 2
-        else:
-            threshold = 128
-        segmented_image = (image >= threshold) * 255
-        return segmented_image.astype(np.uint8)
-
-    def adaptive_segmentation(self, image, block_size=11, C=2):
-        return cv2.adaptiveThreshold(image, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-                                     cv2.THRESH_BINARY, block_size, C)
+#################################################################################################################################
