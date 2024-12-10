@@ -89,7 +89,15 @@ class ImageProcessingApp:
         
         # Initialize processor
         self.processor = ImageProcessingClass(None)
+       
+       ###############################################################################
+
+
+
+        ###############################################################################
+        
         #image loading
+
     def load_image(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.jpg;*.jpeg;*.png;*.bmp;*.tiff")])
         if file_path:
@@ -116,13 +124,29 @@ class ImageProcessingApp:
             processed_tk = ImageTk.PhotoImage(processed_resized)
             self.processed_image_label.config(image=processed_tk)
             self.processed_image_label.image = processed_tk
+        
+        ###############################################################################
+
+        #gray scaling
+
+    def Gray_scaling(self, event=None):
+        self.processed_image = None
+        self.processed_image = self.processor.grayscale()
+        self.display_images(self.image, self.processed_image)
+
+        ###############################################################################
+
+        
+        ###############################################################################
+        
         #manual segmentation
+
     def apply_manual_segmentation(self):
         self.processed_image = None
 
         if self.image is not None:
             # Convert the image to a numpy array in grayscale
-            img_array = np.array(self.image.convert('L'))  # Convert to grayscale
+            img_array = np.array(self.processor.grayscale())  # Convert to grayscale
 
             # Set threshold values (you can adjust these as needed)
             low_threshold, high_threshold = 180, 200
@@ -135,6 +159,15 @@ class ImageProcessingApp:
 
             # Display the original and processed images
             self.display_images(self.image, segmented_image)
+        
+        ###############################################################################
+    
+    
+    
+    
+        ###############################################################################
+        
+        #manual segmentation
 
     def manual_segmentation(self, image, low_threshold, high_threshold, value=255):
         """
@@ -157,13 +190,20 @@ class ImageProcessingApp:
         segmented_image[mask] = value
         
         return segmented_image
+        
+        ###############################################################################
+        
+
+        ###############################################################################
+        
         #valley segmentation
+    
     def apply_valley_segmentation(self):
 
         self.processed_image = None
         if self.image is not None:
             # Convert the image to a numpy array in grayscale
-            img_array = np.array(self.image.convert('L'))  # Convert to grayscale
+            img_array = np.array(self.processor.grayscale())  # Convert to grayscale
 
             # Perform valley segmentation
             segmented_image_array = self.valley_segmentation(img_array)
@@ -200,24 +240,49 @@ class ImageProcessingApp:
         
         return segmented_image.astype(np.uint8)
         
+        ###############################################################################
+        
+        
+        ###############################################################################
+        
         #half tone
+
     def apply_halftone(self, event=None):
         self.processed_image = None
         self.processed_image = self.processor.halftoning()
         self.display_images(self.image, self.processed_image)
         
+        ###############################################################################
+        
+        
+        ###############################################################################
+        
         #histogram
+
     def apply_histogram(self, event=None):
         self.processed_image = None
         self.processed_image = self.processor.histogram_equalization()
         self.display_images(self.image, self.processed_image)
         
+        ###############################################################################
+
+
+        ###############################################################################
+        
         #gray scaling
+
     def Gray_scaling(self, event=None):
         self.processed_image = None
         self.processed_image = self.processor.grayscale()
         self.display_images(self.image, self.processed_image)
+
+        ###############################################################################
+        
+        
+        ###############################################################################
+        
         #image operation
+
     def apply_image_operation(self, event=None):
         if not self.image:
             return
@@ -237,8 +302,13 @@ class ImageProcessingApp:
         # Reset the processor with the original image
         self.processor = ImageProcessingClass(self.image)
         
+        ###############################################################################
+
+
+        ###############################################################################
 
         #advanced edge
+
     def apply_advan_edge(self, event=None):
         self.processed_image = None
         
@@ -266,10 +336,14 @@ class ImageProcessingApp:
             self.processed_image = self.processed_image[0]  # Adjust index if necessary
         self.display_images(self.image, self.processed_image)
         self.processor = ImageProcessingClass(self.image)
-        
-        
+
+        ###############################################################################
+
+
+        ###############################################################################       
         
         #filtering
+
     def apply_spatial_frequency(self, event=None):
         self.processed_image = None
         if not self.image:
@@ -288,9 +362,13 @@ class ImageProcessingApp:
         self.display_images(self.image, self.processed_image)
         self.processor = ImageProcessingClass(self.image)
         
-       
+       ###############################################################################
+
+
+       ###############################################################################
        
         #simple dege
+
     def apply_simple_edge(self, event=None):
         self.processed_image = None
         if not self.image:
@@ -311,8 +389,13 @@ class ImageProcessingApp:
         # Reset the processor with the original image
         self.processor = ImageProcessingClass(self.image)
 
+        ###############################################################################
 
+
+        ###############################################################################
+        
         #threshold
+        
     def apply_thresholding(self):
         self.processed_image = None
         if not self.image:
@@ -328,8 +411,14 @@ class ImageProcessingApp:
         # Show the average pixel value in a pop-up message box
         messagebox.showinfo("Average Pixel Value", f"The average pixel value is: {avg_pixel_value:.2f}")
         
+        ###############################################################################
 
+
+
+        ###############################################################################
+        
         #histogram segmentation
+    
     def apply_hist_seg(self, event=None):
         if not self.image:
             return
@@ -348,9 +437,15 @@ class ImageProcessingApp:
 
         self.display_images(self.image, self.processed_image)
         self.processor = ImageProcessingClass(self.image)
-        
+
+        ###############################################################################
+
+
+
+        ###############################################################################
 
         #simple halftone
+
     def apply_halftone_simple(self):
         self.processed_image = None
         if not self.image:
@@ -364,13 +459,18 @@ class ImageProcessingApp:
         # Display the processed image
         self.display_images(self.image, self.processed_image)
 
+        ###############################################################################
+
+
+        ###############################################################################
 
         #peak segmentation
+    
     def apply_peak_segmentation(self):
         self.processed_image = None
         if self.image is not None:
             # Convert the image to a numpy array in grayscale
-            img_array = np.array(self.image.convert('L'))  # Convert to grayscale
+            img_array = np.array(self.processor.grayscale())  # Convert to grayscale
 
             # Compute histogram of the image
             histogram, bin_edges = np.histogram(img_array.flatten(), bins=256, range=[0, 256])
@@ -394,14 +494,19 @@ class ImageProcessingApp:
 
             # Display the original and processed images
             self.display_images(self.image, segmented_image)
-        
+
+            ###############################################################################
+
+
+            ###############################################################################
 
         #adaptive segmentation
+
     def apply_adaptive_segmentation(self):
         self.processed_image = None
         if self.image is not None:
             # Convert the image to a numpy array in grayscale
-            img_array = np.array(self.image.convert('L'))  # Convert to grayscale
+            img_array = np.array(self.processor.grayscale())  # Convert to grayscale
 
             # Perform adaptive thresholding using OpenCV
             adaptive_thresh = cv2.adaptiveThreshold(
@@ -418,6 +523,8 @@ class ImageProcessingApp:
 
             # Display the original and processed images
             self.display_images(self.image, segmented_image)
+
+            ###############################################################################
 
 
 def main():

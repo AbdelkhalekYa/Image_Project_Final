@@ -31,9 +31,8 @@ class ImageProcessingClass:
     
     def halftoning(self, threshold=128):
         if self.image.mode != 'L':
-            self.image = self.image.convert('L')
-
-        self.image = self.grayscale()
+            self.image = self.grayscale()
+        
         img_array = np.array(self.image, dtype=np.float32)
 
         height, width = img_array.shape
@@ -61,10 +60,7 @@ class ImageProcessingClass:
 
     def histogram_equalization(self):
         if self.image.mode != 'L':
-            self.image = self.image.convert('L')
-
-        self.image = self.grayscale()
-
+            self.image = self.grayscale()       
         img_array = np.array(self.image)
         flat = img_array.flatten()
 
@@ -188,7 +184,6 @@ class ImageProcessingClass:
 
     def high_pass_filter(self):
 
-        self.image = self.grayscale()
         mask = np.array([
             [0, -1, 0],
             [-1, 5, -1],
@@ -196,7 +191,7 @@ class ImageProcessingClass:
         ], dtype=np.float32)
 
         if self.image.mode != 'L':
-            self.image = self.image.convert('L')
+            self.image = self.grayscale()
 
         img_array = np.array(self.image, dtype=np.float32)
         result = cv2.filter2D(img_array, -1, mask)
@@ -208,7 +203,6 @@ class ImageProcessingClass:
 
     def low_pass_filter(self):
 
-        self.image = self.grayscale()
         mask = np.array([
             [0, 1/6, 0],
             [1/6, 2/6, 1/6],
@@ -216,7 +210,7 @@ class ImageProcessingClass:
         ], dtype=np.float32)
 
         if self.image.mode != 'L':
-            self.image = self.image.convert('L')
+            self.image = self.grayscale()
 
         img_array = np.array(self.image, dtype=np.float32)
         result = cv2.filter2D(img_array, -1, mask)
@@ -229,9 +223,8 @@ class ImageProcessingClass:
     def median_filter(self):
 
         if self.image.mode != 'L':
-            self.image = self.image.convert('L')
+            self.image = self.grayscale()
 
-        self.image = self.grayscale()
         img_array = np.array(self.image, dtype=np.uint8)
         filtered_image = cv2.medianBlur(img_array, 3)
         return Image.fromarray(filtered_image)
